@@ -344,6 +344,10 @@ if( $t_flags['priority_show'] || $t_flags['severity_show'] || $t_flags['reproduc
 
 	$t_spacer = 0;
 
+	// SPPracMantis
+	$t_flags['severity_show'] = false;
+	$t_flags['reproducibility_show'] = false;
+
 	# Priority
 	if( $t_flags['priority_show'] ) {
 		echo '<th class="bug-priority category">', lang_get( 'priority' ), '</th>';
@@ -384,6 +388,9 @@ if( $t_flags['status_show'] || $t_flags['resolution_show'] ) {
 	echo '<tr>';
 
 	$t_spacer = 2;
+
+	//SPPracMantis
+	$t_flags['resolution_show'] = false;
 
 	# Status
 	if( $t_flags['status_show'] ) {
@@ -581,6 +588,8 @@ if( $t_flags['description_show'] && isset( $t_issue['description'] ) ) {
 
 # Steps to Reproduce
 if( $t_flags['steps_to_reproduce_show'] && isset( $t_issue['steps_to_reproduce'] ) ) {
+	//SPPracMantis
+	return;
 	echo '<tr>';
 	echo '<th class="bug-steps-to-reproduce category">', lang_get( 'steps_to_reproduce' ), '</th>';
 	echo '<td class="bug-steps-to-reproduce" colspan="5">', string_display_links( $t_issue['steps_to_reproduce'] ), '</td>';

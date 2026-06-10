@@ -378,6 +378,11 @@ if( $t_show_priority || $t_show_severity || $t_show_reproducibility ) {
 	echo '<tr>';
 
 	$t_spacer = 0;
+	
+	// SPPracMantis
+
+	$t_show_severity = false;
+	$t_show_reproducibility = false;
 
 	if( $t_show_priority ) {
 		# Priority
@@ -425,6 +430,9 @@ if( $t_show_status || $t_show_resolution ) {
 	echo '<tr>';
 
 	$t_spacer = 2;
+	
+	// SPPracMantis
+	$t_show_resolution = false;
 
 	if( $t_show_status ) {
 		# Status
@@ -675,6 +683,8 @@ if( $t_show_description ) {
 
 # Steps to Reproduce
 if( $t_show_steps_to_reproduce ) {
+	// SPPracMantis
+	return;
 	echo '<tr>';
 	echo '<th class="category"><label for="steps_to_reproduce">' . lang_get( 'steps_to_reproduce' ) . '</label></th>';
 	echo '<td colspan="5">';
