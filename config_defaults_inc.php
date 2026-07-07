@@ -1402,9 +1402,14 @@ $g_severity_significant_threshold = MAJOR;
  *
  * @global array $g_view_issues_page_columns
  */
+ // SPPracMantis - Original array
+// $g_view_issues_page_columns = array(
+	// 'selection', 'edit', 'priority', 'id', 'bugnotes_count', 'attachment_count',
+	// 'category_id', 'severity', 'status', 'last_updated', 'summary',
+// );
 $g_view_issues_page_columns = array(
 	'selection', 'edit', 'priority', 'id', 'bugnotes_count', 'attachment_count',
-	'category_id', 'severity', 'status', 'last_updated', 'summary',
+	'category_id', 'status', 'last_updated', 'summary',
 );
 
 /**
@@ -1414,9 +1419,15 @@ $g_view_issues_page_columns = array(
  *
  * @global array $g_print_issues_page_columns
  */
+ 
+//SPPracMantis - Original array
+// $g_print_issues_page_columns = array(
+// 		'selection', 'priority', 'id', 'bugnotes_count', 'attachment_count',
+// 		'category_id', 'severity', 'status', 'last_updated', 'summary',
+// );
 $g_print_issues_page_columns = array(
 	'selection', 'priority', 'id', 'bugnotes_count', 'attachment_count',
-	'category_id', 'severity', 'status', 'last_updated', 'summary',
+	'category_id', 'status', 'last_updated', 'summary',
 );
 
 /**
@@ -1426,11 +1437,17 @@ $g_print_issues_page_columns = array(
  *
  * @global array $g_csv_columns
  */
+//	SPPracMantis - Original array
+// $g_csv_columns = array(
+	// 'id', 'project_id', 'reporter_id', 'handler_id', 'priority',
+	// 'severity', 'reproducibility', 'version', 'projection', 'category_id',
+	// 'date_submitted', 'eta', 'os', 'os_build', 'platform', 'view_state',
+	// 'last_updated', 'summary', 'status', 'resolution', 'fixed_in_version'
+// );
 $g_csv_columns = array(
 	'id', 'project_id', 'reporter_id', 'handler_id', 'priority',
-	'severity', 'reproducibility', 'version', 'projection', 'category_id',
-	'date_submitted', 'eta', 'os', 'os_build', 'platform', 'view_state',
-	'last_updated', 'summary', 'status', 'resolution', 'fixed_in_version'
+	'version', 'projection', 'category_id', 'date_submitted', 'eta', 'os', 'os_build', 'platform', 'view_state',
+	'last_updated', 'summary', 'status', 'fixed_in_version'
 );
 
 /**
@@ -1440,11 +1457,17 @@ $g_csv_columns = array(
  *
  * @global array $g_excel_columns
  */
+ // SPPracMantis - Original array
+// $g_excel_columns = array(
+	// 'id', 'project_id', 'reporter_id', 'handler_id', 'priority', 'severity',
+	// 'reproducibility', 'version', 'projection', 'category_id',
+	// 'date_submitted', 'eta', 'os', 'os_build', 'platform', 'view_state',
+	// 'last_updated', 'summary', 'status', 'resolution', 'fixed_in_version'
+// );
 $g_excel_columns = array(
-	'id', 'project_id', 'reporter_id', 'handler_id', 'priority', 'severity',
-	'reproducibility', 'version', 'projection', 'category_id',
-	'date_submitted', 'eta', 'os', 'os_build', 'platform', 'view_state',
-	'last_updated', 'summary', 'status', 'resolution', 'fixed_in_version'
+	'id', 'project_id', 'reporter_id', 'handler_id', 'priority', 'version', 
+	'projection', 'category_id', 'date_submitted', 'eta', 'os', 'os_build', 
+	'platform', 'view_state', 'last_updated', 'summary', 'status', 'fixed_in_version'
 );
 
 /**

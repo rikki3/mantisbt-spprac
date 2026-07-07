@@ -1033,6 +1033,120 @@ function summary_print_reporter_resolution( $p_resolution_enum_string, array $p_
  *
  * @return void
  */
+ 
+ // SPPracMantis - Original functionality
+// function summary_print_reporter_effectiveness( $p_severity_enum_string, $p_resolution_enum_string, array $p_filter = [] ) {
+	// $t_reporter_summary_limit = config_get( 'reporter_summary_limit' );
+
+	// $t_project_id = helper_get_current_project();
+
+	// $t_severity_multipliers = config_get( 'severity_multipliers' );
+	// $t_resolution_multipliers = config_get( 'resolution_multipliers' );
+
+	// # Get the severity values to use
+	// $c_sev_s = MantisEnum::getValues( $p_severity_enum_string );
+	// $t_enum_sev_count = count( $c_sev_s );
+
+	// # Get the resolution values to use
+	// $c_res_s = MantisEnum::getValues( $p_resolution_enum_string );
+
+	// # Checking if it's a per project statistic or all projects
+	// $t_specific_where = helper_project_specific_where( $t_project_id );
+	// if( ' 1<>1' == $t_specific_where ) {
+		// return;
+	// }
+
+	// # Get all of the bugs and split them up into an array
+	// $t_query = new DBQuery();
+	// $t_sql = 'SELECT COUNT(id) as bugcount, reporter_id, resolution, severity'
+		// . ' FROM {bug} WHERE ' . $t_specific_where;
+	// if( !empty( $p_filter ) ) {
+		// $t_subquery = filter_cache_subquery( $p_filter );
+		// $t_sql .= ' AND {bug}.id IN :filter';
+		// $t_query->bind( 'filter', $t_subquery );
+	// }
+	// $t_sql .= ' GROUP BY reporter_id, resolution, severity';
+	// $t_query->sql( $t_sql );
+
+	// $t_reporter_ressev_arr = array();
+	// $t_reporter_bugcount_arr = array();
+	// $t_arr = $t_query->fetch();
+	// while( $t_arr ) {
+		// if( !isset( $t_reporter_ressev_arr[$t_arr['reporter_id']] ) ) {
+			// $t_reporter_ressev_arr[$t_arr['reporter_id']] = array();
+			// $t_reporter_bugcount_arr[$t_arr['reporter_id']] = 0;
+		// }
+		// if( !isset( $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']] ) ) {
+			// $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']] = array();
+			// $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']]['total'] = 0;
+		// }
+		// if( !isset( $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']][$t_arr['resolution']] ) ) {
+			// $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']][$t_arr['resolution']] = 0;
+		// }
+		// $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']][$t_arr['resolution']] += $t_arr['bugcount'];
+		// $t_reporter_ressev_arr[$t_arr['reporter_id']][$t_arr['severity']]['total'] += $t_arr['bugcount'];
+		// $t_reporter_bugcount_arr[$t_arr['reporter_id']] += $t_arr['bugcount'];
+
+		// $t_arr = $t_query->fetch();
+	// }
+
+	// # Sort our total bug count array so that the reporters with the highest number of bugs are listed first,
+	// arsort( $t_reporter_bugcount_arr );
+
+	// $t_row_count = 0;
+
+	// # We now have a multi dimensional array of users, resolutions and severities, with the
+	// # value of each resolution and severity for each user
+	// foreach( $t_reporter_bugcount_arr as $t_reporter_id => $t_total_user_bugs ) {
+
+		// # Limit the number of reporters listed
+		// if( $t_row_count >= $t_reporter_summary_limit ) {
+			// break;
+		// }
+
+		// # Only print reporters who have reported at least one bug. This helps
+		// # prevent divide by zeroes, showing reporters not on this project, and showing
+		// # users that aren't actually reporters...
+		// if( $t_total_user_bugs > 0 ) {
+			// $t_arr2 = $t_reporter_ressev_arr[$t_reporter_id];
+
+			// echo '<tr>';
+			// $t_row_count++;
+			// echo '<td>';
+			// echo string_attribute( user_get_name( $t_reporter_id ) );
+			// echo '</td>';
+
+			// $t_total_severity = 0;
+			// $t_total_errors = 0;
+			// for( $j = 0; $j < $t_enum_sev_count; $j++ ) {
+				// if( !isset( $t_arr2[$c_sev_s[$j]] ) ) {
+					// continue;
+				// }
+
+				// $t_sev_bug_count = $t_arr2[$c_sev_s[$j]]['total'];
+				// $t_sev_mult = 1;
+				// if( isset( $t_severity_multipliers[$c_sev_s[$j]] ) ) {
+					// $t_sev_mult = $t_severity_multipliers[$c_sev_s[$j]];
+				// }
+
+				// if( $t_sev_bug_count > 0 ) {
+					// $t_total_severity += ( $t_sev_bug_count * $t_sev_mult );
+				// }
+
+				// foreach( $t_resolution_multipliers as $t_res => $t_res_mult ) {
+					// if( isset( $t_arr2[$c_sev_s[$j]][$t_res] ) ) {
+						// $t_total_errors += ( $t_sev_mult * $t_res_mult );
+					// }
+				// }
+			// }
+			// echo '<td class="align-right">' . $t_total_severity . '</td>';
+			// echo '<td class="align-right">' . $t_total_errors . '</td>';
+			// printf( '<td class="align-right">%d</td>', $t_total_severity - $t_total_errors );
+			// echo '</tr>';
+		// }
+	// }
+// }
+// SPPracMantis - Updated functionality
 function summary_print_reporter_effectiveness( $p_severity_enum_string, $p_resolution_enum_string, array $p_filter = [] ) {
 	$t_reporter_summary_limit = config_get( 'reporter_summary_limit' );
 
@@ -1137,7 +1251,9 @@ function summary_print_reporter_effectiveness( $p_severity_enum_string, $p_resol
 					}
 				}
 			}
+			/* SPPracMantis: Severity column hidden from view
 			echo '<td class="align-right">' . $t_total_severity . '</td>';
+			*/
 			echo '<td class="align-right">' . $t_total_errors . '</td>';
 			printf( '<td class="align-right">%d</td>', $t_total_severity - $t_total_errors );
 			echo '</tr>';

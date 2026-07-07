@@ -201,11 +201,19 @@ $t_fields = config_get( 'bug_report_page_fields' );
 $t_fields = columns_filter_disabled( $t_fields );
 
 $t_show_category = in_array( 'category_id', $t_fields );
-$t_show_reproducibility = in_array( 'reproducibility', $t_fields );
 $t_show_eta = in_array( 'eta', $t_fields );
-$t_show_severity = in_array( 'severity', $t_fields );
+
+// SPPracMantis
+$t_show_severity = false;
+#$t_show_severity = in_array( 'severity', $t_fields );
+$t_show_reproducibility = false;
+#$t_show_reproducibility = in_array( 'reproducibility', $t_fields );
+$t_show_steps_to_reproduce = false;
+#$t_show_steps_to_reproduce = in_array( 'steps_to_reproduce', $t_fields );
+$t_show_resolution = false;
+#$t_show_resolution = in_array( 'resolution', $t_fields );
+
 $t_show_priority = in_array( 'priority', $t_fields );
-$t_show_steps_to_reproduce = in_array( 'steps_to_reproduce', $t_fields );
 $t_show_handler = in_array( 'handler', $t_fields )
 	&& access_has_project_level( config_get( 'update_bug_assign_threshold' ) );
 $t_show_monitors = in_array( 'monitors', $t_fields )

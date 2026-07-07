@@ -681,10 +681,10 @@ if( $t_show_description ) {
 	echo '</td></tr>';
 }
 
+// SPPracMantis
+/*
 # Steps to Reproduce
 if( $t_show_steps_to_reproduce ) {
-	// SPPracMantis
-	return;
 	echo '<tr>';
 	echo '<th class="category"><label for="steps_to_reproduce">' . lang_get( 'steps_to_reproduce' ) . '</label></th>';
 	echo '<td colspan="5">';
@@ -695,6 +695,7 @@ if( $t_show_steps_to_reproduce ) {
 		$t_steps_to_reproduce_textarea, '</textarea>';
 	echo '</td></tr>';
 }
+*/
 
 # Additional Information
 if( $t_show_additional_information ) {

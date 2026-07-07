@@ -125,7 +125,9 @@ print_summary_submenu();
 	</table>
 	</div>
 
+	<!-- SPPracMantis -->
 	<!-- BY SEVERITY -->
+<!--
 	<div class="space-10"></div>
 	<div class="widget-box table-responsive">
 		<table class="table table-hover table-bordered table-condensed table-striped">
@@ -138,7 +140,7 @@ print_summary_submenu();
 		<?php summary_print_by_enum( 'severity', $t_filter ) ?>
 	</table>
 	</div>
-
+-->
 	<!-- BY CATEGORY -->
 	<div class="space-10"></div>
 	<div class="widget-box table-responsive">
@@ -247,7 +249,9 @@ print_summary_submenu();
 	</table>
 	</div>
 
+	<!-- SPPracMantis -->
 	<!-- BY RESOLUTION -->
+<!--
 	<div class="space-10"></div>
 	<div class="widget-box table-responsive">
 		<table class="table table-hover table-bordered table-condensed table-striped">
@@ -260,7 +264,7 @@ print_summary_submenu();
 		<?php summary_print_by_enum( 'resolution', $t_filter ) ?>
 	</table>
 	</div>
-
+-->
 	<!-- BY PRIORITY -->
 	<div class="space-10"></div>
 	<div class="widget-box table-responsive">
@@ -296,7 +300,9 @@ print_summary_submenu();
 		<thead>
 			<tr>
 				<th class="width-35"><?php echo lang_get( 'reporter_effectiveness' ) ?></th>
-				<th class="align-right"><?php echo lang_get( 'severity' ); ?></th>
+				<!-- SPPracMantis
+					<th class="align-right"><?php echo lang_get( 'severity' ); ?></th>
+				-->
 				<th class="align-right"><?php echo lang_get( 'errors' ); ?></th>
 				<th class="align-right"><?php echo lang_get( 'total' ); ?></th>
 			</tr>

@@ -154,6 +154,11 @@ function columns_get_standard( $p_enabled_columns_only = true ) {
 	unset( $t_columns['profile_id'] );
 	unset( $t_columns['sticky'] );
 	unset( $t_columns['loading'] );
+	# SPPracMantis
+	unset( $t_columns['severity'] );
+	unset( $t_columns['resolution'] );
+	unset( $t_columns['reproducibility'] );
+	unset( $t_columns['steps_to_reproduce'] );
 
 	# legacy field
 	unset( $t_columns['duplicate_id'] );

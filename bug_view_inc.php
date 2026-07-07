@@ -586,15 +586,16 @@ if( $t_flags['description_show'] && isset( $t_issue['description'] ) ) {
 	echo '</tr>';
 }
 
+//SPPracMantis
+/*
 # Steps to Reproduce
-if( $t_flags['steps_to_reproduce_show'] && isset( $t_issue['steps_to_reproduce'] ) ) {
-	//SPPracMantis
-	return;
+if( $t_flags['steps_to_reproduce_show'] && isset( $t_issue['steps_to_reproduce'] ) ) {	
 	echo '<tr>';
 	echo '<th class="bug-steps-to-reproduce category">', lang_get( 'steps_to_reproduce' ), '</th>';
 	echo '<td class="bug-steps-to-reproduce" colspan="5">', string_display_links( $t_issue['steps_to_reproduce'] ), '</td>';
 	echo '</tr>';
 }
+*/
 
 # Additional Information
 if( $t_flags['additional_information_show'] && isset( $t_issue['additional_information'] ) ) {
