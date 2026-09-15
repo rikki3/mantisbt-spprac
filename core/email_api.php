@@ -860,12 +860,18 @@ function email_relationship_added( $p_bug_id, $p_related_bug_id, $p_rel_type, $p
 	global $g_relationships;
 
 	if( !isset( $g_relationships[$p_rel_type] ) ) {
-		trigger_error( ERROR_RELATIONSHIP_NOT_FOUND, ERROR );
+		throw new ClientException(
+			"Unknown relationship type '$p_rel_type'",
+			ERROR_RELATIONSHIP_NOT_FOUND
+		);
 	}
 
 	$t_rev_rel_type = relationship_get_complementary_type( $p_rel_type );
 	if( !isset( $g_relationships[$t_rev_rel_type] ) ) {
-		trigger_error( ERROR_RELATIONSHIP_NOT_FOUND, ERROR );
+		throw new ClientException(
+		"Unknown relationship type '$t_rev_rel_type'",
+			ERROR_RELATIONSHIP_NOT_FOUND
+		);
 	}
 
 	log_event(
@@ -943,12 +949,18 @@ function email_relationship_send( int $p_bug_id, int $p_related_bug_id, $p_messa
 function email_relationship_deleted( $p_bug_id, $p_related_bug_id, $p_rel_type, $p_skip_email_for_issue_id = 0 ) {
 	global $g_relationships;
 	if( !isset( $g_relationships[$p_rel_type] ) ) {
-		trigger_error( ERROR_RELATIONSHIP_NOT_FOUND, ERROR );
+		throw new ClientException(
+			"Unknown relationship type '$p_rel_type'",
+			ERROR_RELATIONSHIP_NOT_FOUND
+		);
 	}
 
 	$t_rev_rel_type = relationship_get_complementary_type( $p_rel_type );
 	if( !isset( $g_relationships[$t_rev_rel_type] ) ) {
-		trigger_error( ERROR_RELATIONSHIP_NOT_FOUND, ERROR );
+		throw new ClientException(
+			"Unknown relationship type '$t_rev_rel_type'",
+			ERROR_RELATIONSHIP_NOT_FOUND
+		);
 	}
 
 	log_event(
@@ -1419,7 +1431,7 @@ function email_send_all( $p_delete_on_failure = false ) : void {
 		# check if email was not found.  This can happen if another request picks up the email first and sends it.
 		if( $t_email_data === false ) {
 			$t_email_sent = true;
-			log_event( LOG_EMAIL_VERBOSE, 'Message $t_id has already been sent' );
+			log_event( LOG_EMAIL_VERBOSE, 'Message ' . $t_id . ' has already been sent' );
 		} else {
 			log_event( LOG_EMAIL_VERBOSE, 'Sending message ' . $t_id );
 			$t_email_sent = email_send( $t_email_data );

@@ -190,6 +190,7 @@ function summary_helper_get_bugratio( $p_bugs_open, $p_bugs_resolved, $p_bugs_cl
  * @param array  $p_filter Filter array to limit the visibility.
  *
  * @return void
+ * @throws Exception
  */
 function summary_print_by_enum( $p_enum, array $p_filter = [] ) {
 	$t_project_id = helper_get_current_project();
@@ -239,8 +240,8 @@ function summary_print_by_enum( $p_enum, array $p_filter = [] ) {
 			$t_filter_property = FILTER_PROPERTY_PRIORITY;
 			break;
 		default:
-			# Unknown Enum type
-			trigger_error( ERROR_GENERIC, ERROR );
+			$t_message = "Unknown Enum type '$p_enum'";
+			throw new Exception( $t_message, ERROR_GENERIC, [$t_message] );
 	}
 
 	foreach( $t_cache as $t_enum => $t_item) {
@@ -308,6 +309,7 @@ function summary_print_by_enum( $p_enum, array $p_filter = [] ) {
  * @param array $p_filter Filter array to limit the visibility.
  *
  * @return void
+ * @throws ClientException
  */
 function summary_print_by_activity( array $p_filter = [] ) {
 	$t_project_id = helper_get_current_project();
@@ -336,7 +338,9 @@ function summary_print_by_activity( array $p_filter = [] ) {
 	$t_summarybugs = array();
 	while( $t_row = $t_query->fetch() ) {
 		# Skip private bugs unless user has proper permissions
-		if( ( VS_PRIVATE == $t_row['view_state'] ) && ( false == access_has_bug_level( $t_private_bug_threshold, $t_row['id'] ) ) ) {
+		if( ( VS_PRIVATE == $t_row['view_state'] )
+			&& ( !access_has_bug_level( $t_private_bug_threshold, $t_row['id'] ) )
+		) {
 			continue;
 		}
 
@@ -400,7 +404,9 @@ function summary_print_by_age( array $p_filter = [] ) {
 		bug_cache_database_result( $t_row );
 
 		# Skip private bugs unless user has proper permissions
-		if( ( VS_PRIVATE == bug_get_field( $t_row['id'], 'view_state' ) ) && ( false == access_has_bug_level( $t_private_bug_threshold, $t_row['id'] ) ) ) {
+		if( ( VS_PRIVATE == bug_get_field( $t_row['id'], 'view_state' ) )
+			&& ( !access_has_bug_level( $t_private_bug_threshold, $t_row['id'] ) )
+		) {
 			continue;
 		}
 
@@ -463,9 +469,9 @@ function summary_print_by_developer( array $p_filter = [] ) {
 
 	foreach( $t_cache as $t_label => $t_item) {
 		# Build up the hyperlinks to bug views
-		$t_bugs_open = isset( $t_item['open'] ) ? $t_item['open'] : 0;
-		$t_bugs_resolved = isset( $t_item['resolved'] ) ? $t_item['resolved'] : 0;
-		$t_bugs_closed = isset( $t_item['closed'] ) ? $t_item['closed'] : 0;
+		$t_bugs_open = $t_item['open'] ?? 0;
+		$t_bugs_resolved = $t_item['resolved'] ?? 0;
+		$t_bugs_closed = $t_item['closed'] ?? 0;
 		$t_bugs_total = $t_bugs_open + $t_bugs_resolved + $t_bugs_closed;
 		$t_bugs_ratio = summary_helper_get_bugratio( $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total_count);
 
@@ -613,7 +619,9 @@ function summary_print_by_reporter( array $p_filter = [] ) {
  * Print a bug count per category.
  *
  * @param array $p_filter Filter array to limit the visibility.
+ *
  * @return void
+ * @throws ClientException
  */
 function summary_print_by_category( array $p_filter = [] ) {
 	$t_summary_category_include_project = config_get( 'summary_category_include_project' );
@@ -656,9 +664,9 @@ function summary_print_by_category( array $p_filter = [] ) {
 
 	foreach( $t_cache as $t_label => $t_item) {
 		# Build up the hyperlinks to bug views
-		$t_bugs_open = isset( $t_item['open'] ) ? $t_item['open'] : 0;
-		$t_bugs_resolved = isset( $t_item['resolved'] ) ? $t_item['resolved'] :0;
-		$t_bugs_closed = isset( $t_item['closed'] ) ? $t_item['closed'] : 0;
+		$t_bugs_open = $t_item['open'] ?? 0;
+		$t_bugs_resolved = $t_item['resolved'] ?? 0;
+		$t_bugs_closed = $t_item['closed'] ?? 0;
 		$t_bugs_total = $t_bugs_open + $t_bugs_resolved + $t_bugs_closed;
 		$t_bugs_ratio = summary_helper_get_bugratio( $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total_count);
 
@@ -681,6 +689,7 @@ function summary_print_by_category( array $p_filter = [] ) {
  * @param array $p_filter   Filter array to limit the visibility.
  *
  * @return void
+ * @throws ClientException
  */
 function summary_print_by_project( array $p_projects = [], int $p_level = 0, array $p_cache = [], array $p_filter = [] ) {
 	$t_project_id = helper_get_current_project();
@@ -724,11 +733,11 @@ function summary_print_by_project( array $p_projects = [], int $p_level = 0, arr
 	foreach( $p_projects as $t_project ) {
 		$t_name = str_repeat( '&raquo; ', $p_level ) . project_get_name( $t_project );
 
-		$t_pdata = isset( $p_cache[$t_project] ) ? $p_cache[$t_project] : array( 'open' => 0, 'resolved' => 0, 'closed' => 0 );
+		$t_pdata = $p_cache[$t_project] ?? array( 'open' => 0, 'resolved' => 0, 'closed' => 0 );
 
-		$t_bugs_open = isset( $t_pdata['open'] ) ? $t_pdata['open'] : 0;
-		$t_bugs_resolved = isset( $t_pdata['resolved'] ) ? $t_pdata['resolved'] : 0;
-		$t_bugs_closed = isset( $t_pdata['closed'] ) ? $t_pdata['closed'] : 0;
+		$t_bugs_open = $t_pdata['open'] ?? 0;
+		$t_bugs_resolved = $t_pdata['resolved'] ?? 0;
+		$t_bugs_closed = $t_pdata['closed'] ?? 0;
 		$t_bugs_total = $t_bugs_open + $t_bugs_resolved + $t_bugs_closed;
 		
 		$t_bugs_ratio = summary_helper_get_bugratio( $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total_count);
@@ -1378,6 +1387,7 @@ function summary_helper_get_time_stats( $p_project_id, array $p_filter = [] ) {
  * accessible issues by the user.
  *
  * @return array Filter array
+ * @throws ClientException
  */
 function summary_get_filter() {
 	$t_filter = null;

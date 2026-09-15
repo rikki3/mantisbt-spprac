@@ -45,6 +45,8 @@
  * @uses version_api.php
  */
 
+use Mantis\Exceptions\ClientException;
+
 require_once( 'core.php' );
 require_api( 'access_api.php' );
 require_api( 'authentication_api.php' );
@@ -290,8 +292,10 @@ if( is_blank( $f_project ) ) {
 	$f_project_id = project_get_id_by_name( $f_project );
 
 	if( $f_project_id === 0 ) {
-		error_parameters( $f_project );
-		trigger_error( ERROR_PROJECT_NOT_FOUND, ERROR );
+		throw new ClientException( "Project '$f_project' not found",
+			ERROR_PROJECT_NOT_FOUND,
+			[ $f_project ]
+		);
 	}
 }
 
@@ -321,8 +325,10 @@ if( is_blank( $f_version ) ) {
 	$f_version_id = version_get_id( $f_version, $t_project_id );
 
 	if( $f_version_id === false ) {
-		error_parameters( $f_version );
-		trigger_error( ERROR_VERSION_NOT_FOUND, ERROR );
+		throw new ClientException( "Version '$f_version' not found",
+			ERROR_VERSION_NOT_FOUND,
+			[ $f_version ]
+		);
 	}
 }
 
@@ -484,7 +490,6 @@ foreach( $t_project_ids as $t_project_id ) {
 			if( $t_cycle || !in_array( $t_issue_parent, $t_issue_ids ) ) {
 				$l = array_search( $t_issue_parent, $t_issue_set_ids );
 				if( $l !== false ) {
-					/** @noinspection PhpStatementHasEmptyBodyInspection */
 					for( $m = $l+1; $m < count( $t_issue_set_ids ) && $t_issue_set_levels[$m] > $t_issue_set_levels[$l]; $m++ ) {
 						#do nothing
 					}

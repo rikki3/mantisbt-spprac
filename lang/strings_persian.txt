@@ -53,6 +53,7 @@
  * @author Hosseinblue
  * @author Huji
  * @author Jeeputer
+ * @author LProfo
  * @author LordProfo
  * @author Mjbmr
  * @author Mohammad ebz
@@ -201,8 +202,6 @@ $s_update_severity_title = 'روزآمدسازی شدت';
 $s_update_severity_msg = 'انتخاب اولویت مسائل';
 $s_update_severity_button = 'روزآمدسازی شدت';
 $s_hide_button = 'فقط انتخاب شده‌ها را نمایش بده';
-$s_printing_preferences_title = 'انتخاب فیلدها برای چاپ';
-$s_printing_options_link = 'گزینه‌های چاپ';
 $s_bugnote_title = 'رسیدگی‌کنندهٔ یادداشت';
 $s_bugnote_date = 'تاریخ نوشته';
 $s_bugnote_description = 'توضیحات نوشته';
@@ -825,7 +824,7 @@ $s_signup_title = 'ثبت‌نام';
 $s_signup_button = 'ثبت‌نام';
 $s_no_password_request = 'رمز عبور شما با سامانه دیگری مدیریت می‌شود. لطفاً با مدیریت تماس بگیرید.';
 $s_edit_site_settings_title = 'ویرایش تنظیمات سایت';
-$s_save_settings_button = 'ردبندی‌ئانء سپت کنگ';
+$s_save_settings_button = 'ذخیرهٔ تنظیمات';
 $s_site_settings_title = 'تنظیمات سایت';
 $s_system_info_link = 'اطلاعات سامانه';
 $s_site_settings_link = 'تنظیمات سایت';

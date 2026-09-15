@@ -47,6 +47,8 @@ $g_app->group('/issues', function() use ( $g_app ) {
 	$g_app->patch( '/', 'rest_issue_update' );
 	$g_app->patch( '/{id}', 'rest_issue_update' );
 	$g_app->patch( '/{id}/', 'rest_issue_update' );
+	$g_app->post( '/{id}/move', 'rest_issue_move' );
+	$g_app->post( '/{id}/move/', 'rest_issue_move' );
 
 	# Tags
 	$g_app->post( '/{id}/tags', 'rest_issue_tag_attach' );
@@ -77,6 +79,8 @@ $g_app->group('/issues', function() use ( $g_app ) {
 	$g_app->get( '/{id}/files', 'rest_issue_files_get' );
 	$g_app->get( '/{id}/files/{file_id}/', 'rest_issue_files_get' );
 	$g_app->get( '/{id}/files/{file_id}', 'rest_issue_files_get' );
+	$g_app->delete( '/{id}/files/{file_id}/', 'rest_issue_file_delete' );
+	$g_app->delete( '/{id}/files/{file_id}', 'rest_issue_file_delete' );
 });
 
 /**
@@ -455,6 +459,36 @@ function rest_issue_update( Request $p_request, Response $p_response, array $p_a
 }
 
 /**
+ * Move an issue to another project.
+ *
+ * @param Request  $p_request  The request.
+ * @param Response $p_response The response.
+ * @param array    $p_args     Arguments
+ *
+ * @return Response The augmented response.
+ * @throws ClientException
+ */
+function rest_issue_move( Request $p_request, Response $p_response, array $p_args ) {
+	$t_payload = $p_request->getParsedBody();
+	if( !is_array( $t_payload ) ) {
+		return $p_response->withStatus( HTTP_STATUS_BAD_REQUEST, 'Invalid request body or format' );
+	}
+	if( isset( $t_payload['note']['files'] ) ) {
+		$t_payload['note']['files'] = files_base64_to_temp( $t_payload['note']['files'] );
+	}
+
+	$t_command = new IssueMoveCommand( array(
+		'query' => array( 'issue_id' => $p_args['id'] ),
+		'payload' => $t_payload,
+	) );
+
+	$t_result = $t_command->execute();
+	$t_issue = mc_issue_get( '', '', $t_result['issue_id'] );
+
+	return $p_response->withStatus( HTTP_STATUS_SUCCESS, 'Issue moved' )->withJson( array( 'issue' => $t_issue ) );
+}
+
+/**
  * Add users to monitor an issue.
  *
  * @param Request  $p_request  The request.
@@ -578,6 +612,33 @@ function rest_issue_files_get( Request $p_request, Response $p_response, array $
 
 	return $p_response->withStatus( HTTP_STATUS_SUCCESS )->
 		withJson( array( 'files' => $t_files ) );
+}
+
+/**
+ * Delete a file associated with an issue.
+ *
+ * @param Request  $p_request The request.
+ * @param Response $p_response The response.
+ * @param array    $p_args Route arguments.
+ *
+ * @return Response The augmented response.
+ * @throws ClientException
+ */
+function rest_issue_file_delete( Request $p_request, Response $p_response, array $p_args ) {
+	$t_issue_id = $p_args['id'];
+	$t_file_id = $p_args['file_id'];
+
+	$t_command = new IssueFileDeleteCommand( array(
+		'query' => array(
+			'issue_id' => $t_issue_id,
+			'file_id' => $t_file_id,
+		)
+	) );
+	$t_command->execute();
+
+	$t_issue = mc_issue_get( /* username */ '', /* password */ '', $t_issue_id );
+	return $p_response->withStatus( HTTP_STATUS_SUCCESS )
+		->withJson( array( 'issue' => $t_issue ) );
 }
 
 /**

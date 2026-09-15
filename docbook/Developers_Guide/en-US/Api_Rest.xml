@@ -25,10 +25,31 @@
 			<varlistentry>
 				<term>API Token</term>
 				<listitem>
+					<para>This is the primary authentication method.
+					</para>
+					<para>Create an API token for your user account and pass it in the
+						<literal>Authorization</literal> HTTP request header
+						using the RFC 6750 bearer scheme
+						(<literal>Authorization: Bearer &lt;token&gt;</literal>).
+					</para>
+					<warning>
+						<para>The legacy, bare token form
+							(<literal>Authorization: &lt;token&gt;</literal>)
+							has been deprecated in 2.29.0.
+							It is still accepted for backwards compatibility,
+							but will be removed in a future release.
+							The API will issue an HTTP <emphasis>Deprecation</emphasis>
+							header in responses to requests using it.
+						</para>
+					</warning>
+					<para>API token authentication is required when using impersonation.
+					</para>
 					<para>
-						The primary authentication method. Create an API token for your user
-						account and pass it in the <literal>Authorization</literal> HTTP request
-						header.  API token authentication is required when using impersonation.
+						When a request requires authentication but none is provided (and
+						anonymous access is not available), the API responds with
+						<literal>401 Unauthorized</literal> and a
+						<literal>WWW-Authenticate: Bearer</literal> header advertising the
+						expected scheme.
 					</para>
 				</listitem>
 			</varlistentry>
@@ -147,27 +168,55 @@
 		</para>
 
 		<para>
-			Once Postman is installed, you should be able to bootstrap it with the
-			MantisBT API collection via the MantisBT API documentation posted on Postman.
-
-			<ulink url="https://documenter.getpostman.com/view/29959/7Lt6zkP">Download Collection</ulink>.
+			The OpenAPI definition at <literal>api/rest/mantisbt_openapi.yaml</literal> is the
+			only REST API contract. Contributors edit this file when adding or changing REST
+			endpoints; the Postman collection and static documentation are generated from it.
 		</para>
 
 		<para>
-			The MantisBT API Postman collection is also distributed with MantisBT in the
-			`api/rest/api.postman_collection.json`. The Postman environment template is also
-			available at `api/rest/env.postman_environment.json`.
+			Install the pinned generation tools with <literal>npm ci</literal>, then run
+			<literal>npm run api:generate</literal>. This creates the collection at
+			<literal>api/rest/generated/mantisbt.postman_collection.json</literal> and a static
+			Scalar documentation site at <literal>api/rest/generated/docs/index.html</literal>, as well
+			as a Bruno collection at <literal>api/rest/generated/bruno/</literal>.
+		</para>
+
+		<para>
+			Release builds created with <literal>build/buildrelease.py --docbook</literal> generate
+			the same static site and include it at <literal>doc/en-US/rest-api/index.html</literal>.
+			They also publish the Postman collection at
+			<literal>doc/en-US/rest-api/mantisbt.postman_collection.json</literal>, alongside
+			the Bruno collection at <literal>doc/en-US/rest-api/bruno/</literal>, the
+			Administrator's Guide, and the Developer's Guide.
+		</para>
+
+		<para>
+			Import the generated collection together with the retained environment template at
+			<literal>api/rest/env.postman_environment.json</literal>. The collection uses its
+			<literal>{{url}}</literal> and <literal>{{token}}</literal> variables, which the
+			environment supplies for a local MantisBT installation and user API token.
 		</para>
 	</section>
 
-	<section id="restapi.export">
-		<title>Exporting Postman Collection</title>
+	<section id="restapi.bruno">
+		<title>Bruno</title>
 
 		<para>
-			The bundled Postman collection can be updated by clicking on the "..." next
-			to "Mantis Bug Tracker REST API" and choosing "Export...". Then select
-			"Collection v2.1" and click "Export" and select `api/rest/api.postman_collection.json`.
-			Then follow the standard pull request and checkin process.
+			<ulink url="https://www.usebruno.com/">Bruno</ulink> is an open-source API
+			client that stores collections as files. The generated collection uses Bruno's
+			native classic <literal>.bru</literal> format and is created from the OpenAPI
+			definition with <literal>npm run api:bruno</literal> at
+			<literal>api/rest/generated/bruno/</literal>.
+			The command installs Bruno's separately pinned toolchain from
+			<literal>tools/bruno/</literal> when needed.
+		</para>
+
+		<para>
+			To use it, open the <literal>bruno</literal> directory from a release archive
+			in Bruno as a collection. Select its <literal>Your MantisBT instance</literal>
+			environment and set the <literal>protocol</literal>, <literal>hostname</literal>,
+			<literal>port</literal>, <literal>basePath</literal>, and <literal>token</literal>
+			variables for the target installation and user API token.
 		</para>
 	</section>
 </chapter>

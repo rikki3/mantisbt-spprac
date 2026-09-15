@@ -53,6 +53,9 @@
  * @uses version_api.php
  */
 
+use Mantis\Exceptions\ClientException;
+use Mantis\Exceptions\StateException;
+
 require_api( 'access_api.php' );
 require_api( 'authentication_api.php' );
 require_api( 'bug_group_action_api.php' );
@@ -94,9 +97,11 @@ require_api( 'version_api.php' );
  *                           (e.g. read from config_inc.php).
  * @param bool   $p_absolute Indicate if URL is absolute.
  *
- * @return void
+ * @return never
+ * @throws ClientException
  */
-function print_header_redirect( $p_url, $p_sanitize = false, $p_absolute = false ) {
+
+function print_header_redirect( $p_url, $p_sanitize = false, $p_absolute = false ): never {
 	if( error_handled() ) {
 		# Display a basic "proceed" page to show any pending errors, regardless
 		# of $g_stop_on_errors setting which is actually handled in
@@ -130,7 +135,7 @@ function print_header_redirect( $p_url, $p_sanitize = false, $p_absolute = false
 		header( 'Content-Type: text/html; charset=utf-8' );
 		header( 'Location: ' . $t_url );
 	} else {
-		trigger_error( ERROR_PAGE_REDIRECTION, ERROR );
+		throw new ClientException( "Page redirection error", ERROR_PAGE_REDIRECTION );
 	}
 
 	die;
@@ -835,14 +840,12 @@ function print_category_option_list( $p_category_id = 0, $p_project_id = null, $
 
 	foreach( $t_cat_arr as $t_category_row ) {
 		$t_category_id = (int)$t_category_row['id'];
-		$t_disabled = $t_category_row['status'] == CATEGORY_STATUS_DISABLED;
+		$t_disabled = !category_is_enabled( $t_category_id );
 		$t_category_name = category_full_name(
 			$t_category_id,
 			$t_category_row['project_id'] != $t_project_id
 		);
-		if( $t_disabled ) {
-//			$t_category_name .= ' [' . lang_get( 'disabled' ) . ']';
-		}
+
 		echo '<option value="' . $t_category_id . '"';
 		check_selected( $p_category_id, $t_category_id );
 		check_disabled( $t_disabled );
@@ -1930,34 +1933,46 @@ function print_recently_visited() {
 
 /**
  * print a drop down box from input array
+ *
  * @param array        $p_control_array Array of elements in drop down list (name, description).
  * @param string       $p_control_name  Name attribute of <select> box.
  * @param string|array $p_match	        Either a string or an array of selected values.
  * @param boolean      $p_add_any       Whether to display an '[any]' option in the drop down.
  * @param boolean      $p_multiple      Whether drop down list allows multiple values to be selected.
+ * @param boolean      $p_required      Whether user must select a value from the list
+ *                                      (the first item's key in $p_control_array must be empty string)
+ *
  * @return string
  */
-function get_dropdown( array $p_control_array, $p_control_name, $p_match = '', $p_add_any = false, $p_multiple = false ) {
+function get_dropdown( array $p_control_array, $p_control_name, $p_match = '', $p_add_any = false, $p_multiple = false, $p_required = false ) {
 	if( $p_multiple ) {
 		$t_size = ' size="5"';
-		$t_multiple = ' multiple="multiple"';
+		$t_multiple = ' multiple';
 	} else {
 		$t_size = '';
 		$t_multiple = '';
 	}
-	$t_info = sprintf( '<select class="input-sm" %s name="%s" id="%s"%s>', $t_multiple, $p_control_name, $p_control_name, $t_size );
+	$t_required = $p_required ? ' required' : '';
+	/** @noinspection HtmlUnknownAttribute */
+	$t_info = sprintf( '<select class="input-sm" name="%1$s" id="%1$s"%2$s%3$s%4$s data-arbitrary-dates="%5$s">',
+		$p_control_name,
+		$t_required,
+		$t_multiple,
+		$t_size,
+		Period::PERIOD_ARBITRARY_DATES
+	);
 	if( $p_add_any ) {
-		array_unshift( $p_control_array, [ META_FILTER_ANY => '[any]' ] );
+		array_unshift( $p_control_array, [ META_FILTER_ANY => '[' . lang_get( 'any' ) . ']' ] );
 	}
 	foreach ( $p_control_array as $t_name => $t_desc ) {
 		$t_sel = '';
 		if( is_array( $p_match ) ) {
 			if( in_array( $t_name, array_values( $p_match ) ) || in_array( $t_desc, array_values( $p_match ) ) ) {
-				$t_sel = ' selected="selected"';
+				$t_sel = ' selected';
 			}
 		} else {
 			if( ( $t_name === $p_match ) || ( $t_desc === $p_match ) ) {
-				$t_sel = ' selected="selected"';
+				$t_sel = ' selected';
 			}
 		}
 		$t_info .= sprintf( '<option%s value="%s">%s</option>', $t_sel, $t_name, $t_desc );
@@ -2093,9 +2108,12 @@ function print_bug_attachment_header( array $p_attachment, $p_security_token ) {
 
 /**
  * Prints the preview of a text file attachment.
- * @param array $p_attachment An attachment array from within the array returned by
- *              the file_get_visible_attachments() function.
+ *
+ * @param array $p_attachment An attachment array from within the array returned
+ *                            by the file_get_visible_attachments() function.
+ *
  * @return void
+ * @throws StateException
  */
 function print_bug_attachment_preview_text( array $p_attachment ) {
 	if( !$p_attachment['exists'] ) {
@@ -2116,7 +2134,7 @@ function print_bug_attachment_preview_text( array $p_attachment ) {
 			$t_content = $t_row['content'];
 			break;
 		default:
-			trigger_error( ERROR_GENERIC, ERROR );
+			throw new StateException( "Unknown file upload method", ERROR_GENERIC );
 	}
 	echo htmlspecialchars( $t_content, ENT_SUBSTITUTE, 'UTF-8' );
 	echo '</pre>';
@@ -2180,20 +2198,17 @@ function print_bug_attachment_preview_audio_video( array $p_attachment, $p_file_
 function print_timezone_option_list( $p_timezone ) {
 	$t_identifiers = timezone_identifiers_list( DateTimeZone::ALL );
 
+	$t_locations_list = [];
 	foreach( $t_identifiers as $t_identifier ) {
 		$t_zone = explode( '/', $t_identifier, 2 );
-		if( isset( $t_zone[1] ) ) {
-			$t_id = $t_zone[1];
-		} else {
-			$t_id = $t_identifier;
-		}
-		$t_locations[$t_zone[0]][$t_identifier] = array(
+		$t_id = $t_zone[1] ?? $t_identifier;
+		$t_locations_list[$t_zone[0]][$t_identifier] = array(
 			str_replace( '_', ' ', $t_id ),
 			$t_identifier
 		);
 	}
 
-	foreach( $t_locations as $t_continent => $t_locations ) {
+	foreach( $t_locations_list as $t_continent => $t_locations ) {
 		echo "\t" . '<optgroup label="' . $t_continent . '">' . "\n";
 		foreach ( $t_locations as $t_location ) {
 			echo "\t\t" . '<option value="' . $t_location[1] . '"';

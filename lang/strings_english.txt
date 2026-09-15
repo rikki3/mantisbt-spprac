@@ -222,10 +222,6 @@ $s_update_severity_button = 'Update Severity';
 # print_all_bug_page.php : display selected issues
 $s_hide_button = 'Display selected only';
 
-# print_all_bug_options.php : printing preferences
-$s_printing_preferences_title = 'Choose fields to print';
-$s_printing_options_link = 'Printing Options';
-
 # word and excel export
 $s_bugnote_title = 'Note handler';
 $s_bugnote_date = 'Date of note';
@@ -1742,9 +1738,11 @@ $MANTIS_ERROR[ERROR_PLUGIN_UPGRADE_FAILED] = 'Upgrading the plugin schema failed
 $MANTIS_ERROR[ERROR_PLUGIN_UPGRADE_NEEDED] = 'The "%1$s" plugin needs to be upgraded before you can access this page.';
 $MANTIS_ERROR[ERROR_PLUGIN_INVALID_PAGE] = 'The format of the specified plugin page "%1$s" is invalid. It must match "Plugin[/path/to]/page".';
 $MANTIS_ERROR[ERROR_PLUGIN_INVALID_FILE] = 'The format of the specified plugin file "%1$s" is invalid. It must match "Plugin[/path/to]/file[.ext]".';
+$MANTIS_ERROR[ERROR_PLUGIN_ENTITY_NOT_FOUND] = 'Plugin entity "%s" not found';
+$MANTIS_ERROR[ERROR_PLUGIN_RUNTIME] = 'The following error occurred during execution of Plugin "%1$s".';
 $MANTIS_ERROR[ERROR_PLUGIN_GENERIC] = 'There was an unknown error "%1$s" during execution of the "%2$s" plugin.';
 $MANTIS_ERROR[ERROR_COLUMNS_DUPLICATE] = 'Field "%1$s" contains duplicate column "%2$s".';
-$MANTIS_ERROR[ERROR_COLUMNS_INVALID] = 'Field "%1$s" contains invalid field "%2$s".';
+$MANTIS_ERROR[ERROR_COLUMNS_INVALID] = 'Field "%1$s" contains invalid column "%2$s".';
 $MANTIS_ERROR[ERROR_SESSION_VAR_NOT_FOUND] = 'Session variable "%1$s" not found.';
 $MANTIS_ERROR[ERROR_SESSION_NOT_VALID] = 'Your session has become invalidated.';
 $MANTIS_ERROR[ERROR_FORM_TOKEN_INVALID] = 'Invalid form security token. This could be caused by a session timeout, or accidentally submitting the form twice.';
@@ -1809,3 +1807,4 @@ $s_filter_new = 'New';
 $s_filter_unused_tags = 'Unused';
 $s_filter_unused = 'Unused';
 $s_unknown = 'unknown';
+$s_optional = 'Optional';

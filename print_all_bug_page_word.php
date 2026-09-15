@@ -46,6 +46,8 @@
  * @uses profile_api.php
  * @uses project_api.php
  * @uses string_api.php
+ *
+ * @noinspection PhpUnhandledExceptionInspection
  */
 
 require_once( 'core.php' );
@@ -99,8 +101,6 @@ if( $f_type_page != 'html' ) {
 # This is where we used to do the entire actual filter ourselves
 $t_page_number = gpc_get_int( 'page_number', 1 );
 $t_per_page = -1;
-$t_bug_count = null;
-$t_page_count = null;
 
 $t_result = filter_get_bug_rows( $t_page_number, $t_per_page, $t_page_count, $t_bug_count );
 $t_row_count = count( $t_result );
@@ -109,7 +109,8 @@ $t_row_count = count( $t_result );
 if( $f_type_page == 'html' ) {
 	layout_page_header();
 } else {
-	echo '<html xmlns:o="urn:schemas-microsoft-com:office:office"
+	echo /** @lang text */
+		'<html xmlns:o="urn:schemas-microsoft-com:office:office"
 		xmlns:w="urn:schemas-microsoft-com:office:word"
 		xmlns="http://www.w3.org/TR/REC-html40">
 		<head><meta charset="utf-8"></head>';
@@ -177,13 +178,14 @@ for( $j=0; $j < $t_row_count; $j++ ) {
 			if( $f_type_page == 'html' ) {
 				echo '<div class="clearfix" style="page-break-before: always">&nbsp;</div>';
 			} else {
-				echo '<br clear=all style="mso-special-character: line-break; page-break-before: always">&nbsp;';
+				echo /** @lang text */
+					'<br clear=all style="mso-special-character: line-break; page-break-before: always">&nbsp;';
 			}
 		}
 
 		$t_count_exported++;
 
-		$t_last_updated = date( $g_short_date_format, $t_bug->last_updated );
+		$t_last_updated = date( config_get( 'short_date_format' ), $t_bug->last_updated );
 
 		# grab the project name
 		$t_project_name = project_get_field( $t_bug->project_id, 'name' );
@@ -471,25 +473,30 @@ foreach( $t_related_custom_field_ids as $t_custom_field_id ) {
 		<?php
 			$t_attachments = file_get_visible_attachments( $t_id );
 			$t_first_attachment = true;
-			$t_path = config_get_global( 'path' );
+			$t_path = string_html_specialchars( config_get_global( 'path' ) );
 
 			foreach ( $t_attachments as $t_attachment  ) {
 				if( $t_first_attachment ) {
 					$t_first_attachment = false;
 				} else {
-					echo '<br />';
+					echo '<br>';
 				}
 
-				$c_filename = string_attribute( $t_attachment['display_name'] );
-				$c_download_url = htmlspecialchars( $t_attachment['download_url'] );
-				$c_filesize = number_format( $t_attachment['size'] );
-				$c_date_added = date( $t_date_format, $t_attachment['date_added'] );
-				echo $c_filename . ' (' . $c_filesize . ' ' . lang_get( 'bytes' )
-					. ') <span class="italic-small">' . $c_date_added . '</span><br />'
-					. string_display_line_links( $t_path . $c_download_url );
+				$c_download_url = string_html_specialchars( $t_attachment['download_url'] );
+
+				printf( '%s (%s) <span class="italic-small">%s</span><br>%s',
+					string_html_specialchars( $t_attachment['display_name'] ),
+					number_format( $t_attachment['size'] ) . ' ' . lang_get( 'bytes' ),
+					date( $t_date_format, $t_attachment['date_added'] ),
+					$t_path . $c_download_url
+				);
 
 				if( $t_attachment['preview'] && $t_attachment['type'] == 'image' && $f_type_page == 'html' ) {
-					echo '<br /><img src="', $c_download_url, '" alt="', $t_attachment['alt'], '" /><br />';
+					/** @noinspection HtmlUnknownTarget */
+					printf( '<br><img src="%s" alt="%s" /><br>',
+						$c_download_url,
+						string_html_specialchars( $t_attachment['alt'] )
+					);
 				}
 			}
 		?>
@@ -523,11 +530,9 @@ $t_bugnotes = bugnote_get_all_visible_bugnotes( $t_id, $t_user_bugnote_order, $t
 </tr>
 	<?php
 		foreach ( $t_bugnotes as $t_bugnote ) {
-			# prefix all bugnote data with v3_
 			$t_date_submitted = date( $t_date_format, $t_bugnote->date_submitted );
 			$t_last_modified = date( $t_date_format, $t_bugnote->last_modified );
 
-			# grab the bugnote text and id and prefix with v3_
 			$t_note = string_display_links( $t_bugnote->note );
 	?>
 <tr>
@@ -543,19 +548,18 @@ $t_bugnotes = bugnote_get_all_visible_bugnotes( $t_id, $t_user_bugnote_order, $t
 			</td>
 	<td>
 <?php
-					switch ( $t_bugnote->note_type ) {
-						case REMINDER:
-							echo lang_get( 'reminder_sent_to' ) . ': ';
-							$t_note_attr = mb_substr( $t_bugnote->note_attr, 1, mb_strlen( $t_bugnote->note_attr ) - 2 );
-							$t_to = array();
-							foreach ( explode( '|', $t_note_attr ) as $t_recipient ) {
-								$t_to[] = prepare_user_name( $t_recipient );
-							}
-							echo implode( ', ', $t_to ) . '<br />';
-						default:
-							echo string_display_links( $t_bugnote->note );
-					}
-				?>
+			if( $t_bugnote->note_type == REMINDER ) {
+				echo lang_get( 'reminder_sent_to' ) . ': ';
+				$t_note_attr = mb_substr( $t_bugnote->note_attr, 1, mb_strlen( $t_bugnote->note_attr ) - 2 );
+				$t_to = array();
+				foreach ( explode( '|', $t_note_attr ) as $t_recipient ) {
+					$t_to[] = prepare_user_name( $t_recipient );
+				}
+				echo implode( ', ', $t_to ) . '<br />';
+			}
+
+			echo $t_note;
+?>
 			</td>
 		</tr>
 <?php

@@ -118,6 +118,7 @@ $g_cache_cf_bug_values = array();
  * @return array|false array representing custom field
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_cache_row( $p_field_id, $p_trigger_errors = true ) {
 	global $g_cache_custom_field;
@@ -127,12 +128,13 @@ function custom_field_cache_row( $p_field_id, $p_trigger_errors = true ) {
 		custom_field_cache_array_rows( array( $c_field_id ) );
 	}
 
-	# the cached index exist, even when not found
-	$t_cf_row = $g_cache_custom_field[$c_field_id];
+	$t_cf_row = $g_cache_custom_field[$c_field_id] ?? false;
 	if( !$t_cf_row ) {
 		if( $p_trigger_errors ) {
-			error_parameters( 'Custom ' . $p_field_id );
-			trigger_error( ERROR_CUSTOM_FIELD_NOT_FOUND, ERROR );
+			throw new ClientException( "Custom field not found",
+				ERROR_CUSTOM_FIELD_NOT_FOUND,
+				['Custom ' . $p_field_id]
+			);
 		} else {
 			return false;
 		}
@@ -228,6 +230,7 @@ function custom_field_cache_array_rows( array $p_cf_id_array = [] ): void {
  * @param array $p_field_id_array
  *
  * @return void
+ * @throws ClientException
  */
 function custom_field_cache_values( array $p_bug_id_array, array $p_field_id_array ) {
 	global $g_cache_cf_bug_values;
@@ -333,15 +336,19 @@ function custom_field_clear_cache_values( $p_bug_id = null ) {
  * @access public
  */
 function custom_field_clear_cache( $p_field_id = null ) {
-	global $g_cache_custom_field, $g_cached_custom_field_lists;
+	global $g_cache_custom_field_all, $g_cache_custom_field, $g_cache_cf_list, $g_cache_name_to_id_map, $g_cache_cf_linked;
 
-	$g_cached_custom_field_lists = null;
+	$g_cache_custom_field_all = false;
+	$g_cache_cf_list = null;
+	$g_cache_name_to_id_map = [];
+	$g_cache_cf_linked = [];
 
 	if( null === $p_field_id ) {
-		$g_cache_custom_field = array();
+		$g_cache_custom_field = [];
 	} else {
-		if( isset( $g_cache_custom_field[$p_field_id] ) ) {
-			unset( $g_cache_custom_field[$p_field_id] );
+		$c_field_id = (int)$p_field_id;
+		if( isset( $g_cache_custom_field[$c_field_id] ) ) {
+			unset( $g_cache_custom_field[$c_field_id] );
 		}
 	}
 }
@@ -388,6 +395,7 @@ function custom_field_is_linked( $p_field_id, $p_project_id ) {
  * @return bool True if the field is defined, false otherwise
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_exists( $p_field_id ) {
 	return is_array( custom_field_cache_row( $p_field_id, false ) );
@@ -401,6 +409,7 @@ function custom_field_exists( $p_field_id ) {
  * @return int Custom field's type, -1 if it does not exist.
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_type( $p_field_id ) {
 	$t_field = custom_field_cache_row( $p_field_id, false );
@@ -419,11 +428,14 @@ function custom_field_type( $p_field_id ) {
  * @return bool True if the field is defined, error otherwise.
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_ensure_exists( $p_field_id ) {
 	if( !custom_field_exists( $p_field_id ) ) {
-		error_parameters( 'Custom ' . $p_field_id );
-		trigger_error( ERROR_CUSTOM_FIELD_NOT_FOUND, ERROR );
+		throw new ClientException( "Custom field not found",
+			ERROR_CUSTOM_FIELD_NOT_FOUND,
+			['Custom ' . $p_field_id]
+		);
 	}
 	return true;
 }
@@ -465,10 +477,11 @@ function custom_field_is_name_unique( $p_name, $p_custom_field_id = null ) {
  * @return bool True if the name has not been used, error otherwise.
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_ensure_name_unique( $p_name ) {
 	if( !custom_field_is_name_unique( $p_name ) ) {
-		trigger_error( ERROR_CUSTOM_FIELD_NAME_NOT_UNIQUE, ERROR );
+		throw new ClientException( "Custom field name not unique", ERROR_CUSTOM_FIELD_NAME_NOT_UNIQUE );
 	}
 	return true;
 }
@@ -576,15 +589,17 @@ function custom_field_has_write_access( $p_field_id, $p_bug_id, $p_user_id = nul
  * @param string $p_name Custom field name.
  *
  * @return int Id of the new custom field.
- *
+ * @throws ClientException
  * @access public
  */
 function custom_field_create( $p_name ) {
 	$c_name = trim( $p_name );
 
 	if( is_blank( $c_name ) ) {
-		error_parameters( 'name' );
-		trigger_error( ERROR_EMPTY_FIELD, ERROR );
+		throw new ClientException( "Custom field name cannot be empty",
+			ERROR_EMPTY_FIELD,
+			[ 'name ' ]
+		);
 	}
 
 	custom_field_ensure_name_unique( $c_name );
@@ -594,7 +609,10 @@ function custom_field_create( $p_name ) {
 				  VALUES ( ' . db_param() . ',' . db_param() . ')';
 	db_query( $t_query, array( $c_name, '' ) );
 
-	return db_insert_id( db_get_table( 'custom_field' ) );
+	$t_field_id = db_insert_id( db_get_table( 'custom_field' ) );
+	custom_field_clear_cache( $t_field_id );
+
+	return $t_field_id;
 }
 
 /**
@@ -621,18 +639,17 @@ function custom_field_update( $p_field_id, array $p_def_array ) {
 	extract( $p_def_array, EXTR_PREFIX_ALL, 'v');
 
 	if( is_blank( $v_name ) ) {
-		error_parameters( 'name' );
-		trigger_error( ERROR_EMPTY_FIELD, ERROR );
+		throw new ClientException( "Custom field name cannot be empty",
+			ERROR_EMPTY_FIELD,
+			[ 'name ' ]
+		);
 	} elseif( mb_strpos( $v_name, ',' ) ) {
 		# Commas are not allowed in CF name, it causes issues with columns
 		# selection (see #26665)
-		error_parameters( $v_name );
-		trigger_error( ERROR_CUSTOM_FIELD_NAME_INVALID, ERROR );
-	}
-
-	if( is_blank( $v_name ) ) {
-		error_parameters( 'name' );
-		trigger_error( ERROR_EMPTY_FIELD, ERROR );
+		throw new ClientException( "Custom field name is not valid",
+			ERROR_CUSTOM_FIELD_NAME_INVALID,
+			[ $v_name]
+		);
 	}
 
 	# Default value length is limited by underlying DB field
@@ -652,17 +669,19 @@ function custom_field_update( $p_field_id, array $p_def_array ) {
 	}
 
 	if( $v_access_level_rw < $v_access_level_r ) {
-		error_parameters(
-			lang_get( 'custom_field_access_level_r' ) . ', ' .
-			lang_get( 'custom_field_access_level_rw' ) );
-		trigger_error( ERROR_CUSTOM_FIELD_INVALID_PROPERTY, ERROR );
+		throw new ClientException( "Invalid Custom field property",
+			ERROR_CUSTOM_FIELD_INVALID_PROPERTY,
+			[ lang_get( 'custom_field_access_level_r' ) . ', ' . lang_get( 'custom_field_access_level_rw' ) ]
+		);
 	}
 
 	if( $v_length_min < 0
 		|| ( $v_length_max != 0 && $v_length_min > $v_length_max )
 	) {
-		error_parameters( lang_get( 'custom_field_length_min' ) . ', ' . lang_get( 'custom_field_length_max' ) );
-		trigger_error( ERROR_CUSTOM_FIELD_INVALID_PROPERTY, ERROR );
+		throw new ClientException( "Invalid Custom field property",
+			ERROR_CUSTOM_FIELD_INVALID_PROPERTY,
+			[ lang_get( 'custom_field_length_min' ) . ', ' . lang_get( 'custom_field_length_max' ) ]
+		);
 	}
 
 	# Ensure max length for textarea fields is not more than allowed
@@ -671,13 +690,13 @@ function custom_field_update( $p_field_id, array $p_def_array ) {
 			throw new ClientException(
 				'Maximum Length must be ' . $t_max_textarea_length . ' or less.',
 				ERROR_FIELD_TOO_LONG,
-				[lang_get( 'custom_field_length_max' ), $t_max_textarea_length]
+				[ lang_get( 'custom_field_length_max' ), $t_max_textarea_length ]
 			);
 		}
 	}
 
 	if( !custom_field_is_name_unique( $v_name, $p_field_id ) ) {
-		trigger_error( ERROR_CUSTOM_FIELD_NAME_NOT_UNIQUE, ERROR );
+		throw new ClientException( "Custom field name not unique", ERROR_CUSTOM_FIELD_NAME_NOT_UNIQUE );
 	}
 
 
@@ -696,8 +715,10 @@ function custom_field_update( $p_field_id, array $p_def_array ) {
 			new DateTimeImmutable( $v_default_value );
 		}
 		catch( Exception $e ) {
-			error_parameters( lang_get( 'custom_field_default_value' ) );
-			trigger_error( ERROR_CUSTOM_FIELD_INVALID_PROPERTY, ERROR );
+			throw new ClientException( "Invalid Custom field default value",
+				ERROR_CUSTOM_FIELD_INVALID_PROPERTY,
+				[ lang_get( 'custom_field_default_value' ) ]
+			);
 		}
 	}
 
@@ -782,6 +803,7 @@ function custom_field_link( $p_field_id, $p_project_id ) {
 	$t_query = 'INSERT INTO {custom_field_project} ( field_id, project_id )
 				  VALUES ( ' . db_param() . ', ' . db_param() . ')';
 	db_query( $t_query, array( $p_field_id, $p_project_id ) );
+	custom_field_clear_cache( $p_field_id );
 
 	return true;
 }
@@ -805,6 +827,7 @@ function custom_field_unlink( $p_field_id, $p_project_id ) {
 	$t_query = 'DELETE FROM {custom_field_project}
 				  WHERE field_id = ' . db_param() . ' AND project_id = ' . db_param();
 	db_query( $t_query, array( $p_field_id, $p_project_id ) );
+	custom_field_clear_cache( $p_field_id );
 }
 
 /**
@@ -852,6 +875,7 @@ function custom_field_unlink_all( $p_project_id ) {
 	db_param_push();
 	$t_query = 'DELETE FROM {custom_field_project} WHERE project_id=' . db_param();
 	db_query( $t_query, array( $p_project_id ) );
+	custom_field_clear_cache();
 }
 
 /**
@@ -1014,6 +1038,7 @@ function custom_field_get_ids() {
  * @return array Ids of linked projects (can be empty)
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_get_project_ids( $p_field_id ) {
 	$t_def = custom_field_get_definition( $p_field_id );
@@ -1021,13 +1046,15 @@ function custom_field_get_project_ids( $p_field_id ) {
 }
 
 /**
- * Return a field definition row for the field or error if the field does not exist.
+ * Return a field definition row for the field or error if the field does not
+ * exist.
  *
  * @param int $p_field_id Custom field identifier.
  *
  * @return array custom field definition
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_get_definition( $p_field_id ) {
 	return custom_field_cache_row( $p_field_id );
@@ -1044,6 +1071,7 @@ function custom_field_get_definition( $p_field_id ) {
  * @return string
  *
  * @access public
+ * @throws ClientException
  */
 function custom_field_get_field( $p_field_id, $p_field_name ) {
 	$t_row = custom_field_get_definition( $p_field_id );
@@ -1233,7 +1261,7 @@ function custom_field_get_sequence( $p_field_id, $p_project_id ) {
  * @param string $p_value    Custom field value.
  *
  * @return bool
- *
+ * @throws ClientException
  * @access public
  */
 function custom_field_validate( $p_field_id, $p_value ) {
@@ -1513,7 +1541,7 @@ function custom_field_default_to_value( $p_value, $p_type ) {
  * @param bool  $p_log_insert Create history logs for new values.
  *
  * @return bool True on success, false on failure
- *
+ * @throws ClientException
  * @access public
  */
 function custom_field_set_value( $p_field_id, $p_bug_id, $p_value, $p_log_insert = true ) {
@@ -1639,7 +1667,9 @@ function print_custom_field_input( array $p_field_def, $p_bug_id = null, $p_requ
 			$t_custom_field_value, $p_required ? ' required ' : '' );
 		print_hidden_input( custom_field_presence_field_name( $p_field_def['id'] ), '1' );
 	} else {
-		trigger_error( ERROR_CUSTOM_FIELD_INVALID_DEFINITION, ERROR );
+		throw new ClientException( "Invalid Custom field definition",
+			ERROR_CUSTOM_FIELD_INVALID_DEFINITION
+		);
 	}
 }
 

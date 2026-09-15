@@ -28,6 +28,7 @@
 
 use Mantis\Exceptions\ClientException;
 use Mantis\Exceptions\ServiceException;
+use Mantis\Exceptions\StateException;
 
 require_once( __DIR__ . '/mc_core.php' );
 
@@ -40,6 +41,7 @@ require_once( __DIR__ . '/mc_core.php' );
  *
  * @return string Base64 encoded data that represents the attachment.
  * @throws ClientException
+ * @throws StateException
  */
 function mc_issue_attachment_get( $p_username, $p_password, $p_issue_attachment_id ) {
 	$t_user_id = mci_check_login( $p_username, $p_password );
@@ -82,10 +84,10 @@ function mc_issue_attachment_add( $p_username, $p_password, $p_issue_id, $p_name
 /**
  * Delete an issue attachment given its id.
  *
- * @param string  $p_username            The name of the user trying to add an
- *                                       attachment to an issue.
- * @param string  $p_password            The password of the user.
- * @param integer $p_issue_attachment_id The id of the attachment to be deleted.
+ * @param string $p_username            The name of the user trying to add an
+ *                                      attachment to an issue.
+ * @param string $p_password            The password of the user.
+ * @param int    $p_issue_attachment_id The id of the attachment to be deleted.
  *
  * @return bool|RestFault|SoapFault true: success, false: failure
  * @throws ClientException
@@ -97,18 +99,12 @@ function mc_issue_attachment_delete( $p_username, $p_password, $p_issue_attachme
 		return mci_fault_login_failed();
 	}
 
-	$t_bug_id = file_get_field( $p_issue_attachment_id, 'bug_id' );
+	$t_command = new IssueFileDeleteCommand( [
+		'query' => [
+			'file_id' => $p_issue_attachment_id,
+		]
+	] );
+	$t_command->execute();
 
-	# Perform access control checks
-	$t_attachment_owner = file_get_field( $p_issue_attachment_id, 'user_id' );
-	$t_current_user_is_attachment_owner = $t_attachment_owner == $t_user_id;
-	# Factor in allow_delete_own_attachments=ON|OFF
-	if( !$t_current_user_is_attachment_owner || !config_get( 'allow_delete_own_attachments' ) ) {
-		# Check access against delete_attachments_threshold
-		if( !access_has_bug_level( config_get( 'delete_attachments_threshold' ), $t_bug_id, $t_user_id ) ) {
-			return mci_fault_access_denied( $t_user_id );
-		}
-	}
-
-	return file_delete( $p_issue_attachment_id, 'bug' );
+	return true;
 }

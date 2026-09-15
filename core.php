@@ -359,6 +359,12 @@ function set_default_path() {
 		return false;
 	}
 
+	# $_SERVER['SCRIPT_NAME'], does not contain an URL when running from CLI
+	# Do not set $g_path in this case.
+	if(php_sapi_name() == 'cli') {
+		return false;
+	}
+
 	$t_protocol = 'http';
 	$t_host = 'localhost';
 	if( isset( $_SERVER['SCRIPT_NAME'] ) ) {
@@ -409,7 +415,9 @@ function set_default_path() {
 		$t_path = rtrim( $t_path, '/\\' ) . '/';
 
 		if( strpos( $t_path, '&#' ) ) {
-			echo 'Can not safely determine $g_path. Please set $g_path manually in ' . $g_config_path . 'config_inc.php';
+			echo 'Can not safely determine $g_path.'
+				. "Please set it manually in $g_config_path config_inc.php"
+				. PHP_EOL;
 			die;
 		}
 	} else {
@@ -447,7 +455,7 @@ function autoload_mantis( $p_class ) {
 	}
 
 	# Exceptions
-	if( substr( $p_class, -9 ) === 'Exception' ) {
+	if( substr( $p_class, -9 ) === 'Exception' || substr( $p_class, -5 ) === 'Trait' ) {
 		$t_require_path = $g_core_path . 'exceptions/' . $p_class . '.php';
 		if( file_exists( $t_require_path ) ) {
 			require_once( $t_require_path );
